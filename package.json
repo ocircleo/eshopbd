@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate": "dotenv -e .env.local -- node-pg-migrate up",
+    "migrate:down": "dotenv -e .env.local -- node-pg-migrate down"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -24,8 +26,11 @@
   "devDependencies": {
     "autoprefixer": "^10.5.0",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "node-pg-migrate": "^8.0.4",
+    "pg": "^8.20.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
     "tailwindcss-animate": "^1.0.7"
