@@ -27,18 +27,19 @@ PHASE 2
 PHASE 3
 PHASE 4
 PHASE 5
+PHASE 6
 
 ---
 
 ## Current Phase
 
-PHASE 6
+PHASE 7
 
 ---
 
 ## Next Phase
 
-PHASE 7
+PHASE 8
 
 ---
 
