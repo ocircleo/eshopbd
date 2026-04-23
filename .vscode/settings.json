@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^npm install zod jsonwebtoken bcryptjs cookie react-hook-form lucide-react$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
