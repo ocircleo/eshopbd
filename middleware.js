@@ -2,20 +2,22 @@ import { NextResponse } from 'next/server'
 import { verifyToken } from './src/lib/jwt.js'
 
 export function middleware(request) {
-  if (request.nextUrl.pathname.startsWith('/api/admin')) {
+  const pathname = request.nextUrl.pathname
+
+  if (pathname.startsWith('/api/admin') || pathname.startsWith('/admin')) {
+    if (pathname === '/admin/login') return NextResponse.next()
+
     const token = request.cookies.get('token')?.value
 
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
     try {
-      const user = verifyToken(token)
-      const response = NextResponse.next()
-      response.headers.set('x-user', JSON.stringify(user))
-      return response
+      verifyToken(token)
+      return NextResponse.next()
     } catch (error) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
 
@@ -23,5 +25,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: '/api/admin/:path*'
+  matcher: ['/api/admin/:path*', '/admin/:path*']
 }
