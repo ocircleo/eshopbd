@@ -24,18 +24,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 PHASE 1
 PHASE 2
+PHASE 3
 
 ---
 
 ## Current Phase
 
-PHASE 3
+PHASE 4
 
 ---
 
 ## Next Phase
 
-PHASE 4
+PHASE 5
 
 ---
 
