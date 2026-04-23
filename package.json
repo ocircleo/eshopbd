@@ -11,6 +11,7 @@
     "migrate:down": "dotenv -e .env.local -- node-pg-migrate down"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.0",
     "@tailwindcss/postcss": "^4.2.4",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
