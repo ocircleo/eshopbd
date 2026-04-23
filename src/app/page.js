@@ -1,53 +1,153 @@
-import Image from "next/image";
+import { Suspense } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 
-export default function Home() {
+async function getPromotions() {
+  try {
+    const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/promotions', { cache: 'no-store' })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch (error) {
+    console.error('Failed to fetch promotions:', error)
+  }
+  return []
+}
+
+async function getProducts() {
+  try {
+    const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/products?limit=12', { cache: 'no-store' })
+    if (res.ok) {
+      const data = await res.json()
+      return data.products || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+  }
+  return []
+}
+
+function PromotionBanner({ promotions }) {
+  if (!promotions || promotions.length === 0) return null
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <div className="w-full mb-8">
+      <div className="relative h-64 md:h-80 overflow-hidden rounded-lg">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
+          src={promotions[0].image_url}
+          alt="Promotion"
+          fill
+          className="object-cover"
           priority
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h2 className="text-2xl md:text-4xl font-bold mb-4">Special Offers</h2>
+            <Link href={promotions[0].redirect_url}>
+              <Button size="lg">Shop Now</Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
+      </div>
+    </div>
+  )
+}
+
+function ProductGrid({ products }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {products.map((product) => (
+        <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <div className="aspect-square relative">
+            {product.media && product.media.length > 0 ? (
+              <Image
+                src={product.media[0].url}
+                alt={product.title}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500">No Image</span>
+              </div>
+            )}
+          </div>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.title}</h3>
+            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.short_description}</p>
+            <div className="flex justify-between items-center">
+              <span className="text-xl font-bold text-green-600">${product.price}</span>
+              <Link href={`/product/${product.id}`}>
+                <Button size="sm">View</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function SearchBar() {
+  return (
+    <div className="w-full max-w-md mx-auto mb-8">
+      <div className="flex gap-2">
+        <Input placeholder="Search products..." className="flex-1" />
+        <Link href="/search">
+          <Button>Search</Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+export default async function Home() {
+  const [promotions, products] = await Promise.all([
+    getPromotions(),
+    getProducts()
+  ])
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <Link href="/" className="text-2xl font-bold text-gray-900">
+            EShopBD
+          </Link>
+          <nav className="flex gap-4">
+            <Link href="/search" className="text-gray-600 hover:text-gray-900">
+              Search
+            </Link>
+            <Link href="/order-status" className="text-gray-600 hover:text-gray-900">
+              Order Status
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <SearchBar />
+        <PromotionBanner promotions={promotions} />
+
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
+          <Suspense fallback={<div>Loading products...</div>}>
+            <ProductGrid products={products} />
+          </Suspense>
+        </section>
+      </main>
+
+      <footer className="bg-white border-t mt-16">
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
+          <p>&copy; 2024 EShopBD. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  )
+}
             Deploy Now
           </a>
           <a
