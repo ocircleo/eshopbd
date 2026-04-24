@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getProducts, createProduct } from '../../../../services/catalogService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../lib/auth.js'
 
 export async function GET(request) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const { searchParams } = new URL(request.url)
     const category_id = searchParams.get('category_id') ? parseInt(searchParams.get('category_id')) : undefined
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -24,9 +19,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    getUser(request)
+    const user = requireAdmin(request)
     const data = await request.json()
-    const product = await createProduct(data)
+    const product = await createProduct(data, user)
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })

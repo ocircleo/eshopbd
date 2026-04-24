@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { updateAdmin, deleteAdmin } from '../../../../../services/authService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireSuperAdmin } from '../../../../../lib/auth.js'
 
 export async function PUT(request, { params }) {
   try {
-    const user = getUser(request)
+    const user = requireSuperAdmin(request)
     const id = parseInt(params.id)
     const updates = await request.json()
 
@@ -22,7 +17,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const user = getUser(request)
+    const user = requireSuperAdmin(request)
     const id = parseInt(params.id)
 
     const deletedAdmin = await deleteAdmin(id, user)

@@ -1,22 +1,33 @@
 import { NextResponse } from 'next/server'
-import { verifyToken } from './src/lib/jwt.js'
+import { requireAdmin, requireSuperAdmin } from './src/lib/auth.js'
 
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
+  const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/')
+  const isAdminApiPath = pathname === '/api/admin' || pathname.startsWith('/api/admin/')
 
-  if (pathname.startsWith('/api/admin') || pathname.startsWith('/admin')) {
+  if (isAdminPath || isAdminApiPath) {
     if (pathname === '/admin/login') return NextResponse.next()
 
-    const token = request.cookies.get('token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-
     try {
-      verifyToken(token)
+      if (pathname === '/admin/admins' || pathname.startsWith('/admin/admins/')) {
+        requireSuperAdmin(request)
+      } else {
+        requireAdmin(request)
+      }
+
       return NextResponse.next()
     } catch (error) {
+      if (isAdminApiPath) {
+        const status = error.message === 'Forbidden' ? 403 : 401
+        const message = status === 403 ? 'Forbidden' : 'Unauthorized'
+        return NextResponse.json({ error: message }, { status })
+      }
+
+      if (error.message === 'Forbidden') {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
@@ -25,5 +36,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/api/admin/:path*', '/admin/:path*']
+  matcher: ['/api/admin', '/api/admin/:path*', '/admin', '/admin/:path*']
 }

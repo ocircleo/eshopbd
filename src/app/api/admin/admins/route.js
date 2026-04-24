@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createAdmin, listAdmins } from '../../../../services/authService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireSuperAdmin } from '../../../../lib/auth.js'
 
 export async function GET(request) {
   try {
-    const user = getUser(request)
+    const user = requireSuperAdmin(request)
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -24,7 +19,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const user = getUser(request)
+    const user = requireSuperAdmin(request)
     const data = await request.json()
 
     const newAdmin = await createAdmin(data, user)

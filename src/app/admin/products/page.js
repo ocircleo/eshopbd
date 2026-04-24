@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { productSchema } from '../../../validators/catalog.js'
@@ -12,12 +12,16 @@ import { Textarea } from '../../../components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
+import useInternalFetcher from '../../../utls/fetcher/useInternalFetcher'
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
   const [editing, setEditing] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  const { data: productsData, mutate: mutateProducts } = useInternalFetcher('/api/admin/products')
+  const products = productsData?.products || []
+
+  const { data: categories } = useInternalFetcher('/api/admin/categories')
 
   const {
     register,
@@ -30,27 +34,6 @@ export default function ProductsPage() {
     resolver: zodResolver(productSchema)
   })
 
-  useEffect(() => {
-    fetchProducts()
-    fetchCategories()
-  }, [])
-
-  const fetchProducts = async () => {
-    const res = await fetch('/api/admin/products')
-    if (res.ok) {
-      const data = await res.json()
-      setProducts(data.products)
-    }
-  }
-
-  const fetchCategories = async () => {
-    const res = await fetch('/api/admin/categories')
-    if (res.ok) {
-      const data = await res.json()
-      setCategories(data)
-    }
-  }
-
   const onSubmit = async (data) => {
     const url = editing ? `/api/admin/products/${editing.id}` : '/api/admin/products'
     const method = editing ? 'PUT' : 'POST'
@@ -62,7 +45,7 @@ export default function ProductsPage() {
     })
 
     if (res.ok) {
-      fetchProducts()
+      mutateProducts()
       setDialogOpen(false)
       reset()
       setEditing(null)
@@ -85,7 +68,7 @@ export default function ProductsPage() {
     if (confirm('Are you sure?')) {
       const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        fetchProducts()
+        mutateProducts()
       }
     }
   }
@@ -117,12 +100,12 @@ export default function ProductsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((prod) => (
+              {(products || []).map((prod) => (
                 <TableRow key={prod.id}>
                   <TableCell>{prod.id}</TableCell>
                   <TableCell>{prod.title}</TableCell>
                   <TableCell>${prod.price}</TableCell>
-                  <TableCell>{categories.find(c => c.id === prod.category_id)?.name}</TableCell>
+                  <TableCell>{(categories || []).find(c => c.id === prod.category_id)?.name}</TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm" onClick={() => handleEdit(prod)} className="mr-2">
                       Edit
@@ -161,7 +144,7 @@ export default function ProductsPage() {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {(categories || []).map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>

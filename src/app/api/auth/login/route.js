@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server'
 import { login } from '../../../../services/authService.js'
 import { signToken } from '../../../../lib/jwt.js'
+import { rateLimit } from '../../../../lib/rateLimit.js'
 
 export async function POST(request) {
+  // Rate limit login attempts: 5 per 15 minutes per IP
+  const rateLimitResponse = rateLimit(5, 15 * 60 * 1000)(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const { phone, password } = await request.json()
 

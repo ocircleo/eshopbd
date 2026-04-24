@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { updateOrder } from '../../../../../services/orderService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../../lib/auth.js'
 
 export async function PUT(request, { params }) {
   try {
-    const user = getUser(request)
+    const user = requireAdmin(request)
     const id = parseInt(params.id)
     const data = await request.json()
     const order = await updateOrder(id, data, user)

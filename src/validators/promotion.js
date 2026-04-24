@@ -8,5 +8,5 @@ export const promotionSchema = z.object({
 })
 
 export const updatePromotionSchema = promotionSchema.partial().extend({
-  id: z.number().int().positive()
+  id: z.string().uuid()
 })

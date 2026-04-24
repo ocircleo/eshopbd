@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getCategories, createCategory } from '../../../../services/catalogService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../lib/auth.js'
 
 export async function GET(request) {
   try {
-    getUser(request) // Check auth
+    requireAdmin(request)
     const categories = await getCategories()
     return NextResponse.json(categories)
   } catch (error) {
@@ -19,9 +14,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    getUser(request)
+    const user = requireAdmin(request)
     const data = await request.json()
-    const category = await createCategory(data)
+    const category = await createCategory(data, user)
     return NextResponse.json(category, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, getOrder } from '../../../services/orderService.js'
+import { rateLimit } from '../../../lib/rateLimit.js'
 
 export async function POST(request) {
+  // Rate limit order creation: 5 orders per hour per IP
+  const rateLimitResponse = rateLimit(5, 60 * 60 * 1000)(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const data = await request.json()
     const order = await createOrder(data)
@@ -12,6 +19,12 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
+  // Rate limit order status checks: 20 per hour per IP
+  const rateLimitResponse = rateLimit(20, 60 * 60 * 1000)(request)
+  if (rateLimitResponse) {
+    return rateLimitResponse
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const phone = searchParams.get('phone')

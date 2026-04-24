@@ -1,7 +1,10 @@
 exports.up = (pgm) => {
+  // Enable UUID extension
+  pgm.createExtension('uuid-ossp');
+
   // users table
   pgm.createTable('users', {
-    id: 'id',
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     name: { type: 'varchar', notNull: true },
     email: { type: 'varchar' },
     phone: { type: 'varchar', notNull: true, unique: true },
@@ -11,24 +14,24 @@ exports.up = (pgm) => {
 
   // categories table
   pgm.createTable('categories', {
-    id: 'id',
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     name: { type: 'varchar', notNull: true }
   });
 
   // products table
   pgm.createTable('products', {
-    id: 'id',
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     title: { type: 'varchar', notNull: true },
     price: { type: 'decimal(10,2)', notNull: true },
-    category_id: { type: 'integer', references: 'categories(id)' },
+    category_id: { type: 'uuid', references: 'categories(id)' },
     short_description: { type: 'text' },
     details: { type: 'jsonb' }
   });
 
   // product_media table
   pgm.createTable('product_media', {
-    id: 'id',
-    product_id: { type: 'integer', notNull: true, references: 'products(id)' },
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
+    product_id: { type: 'uuid', notNull: true, references: 'products(id)' },
     type: { type: 'varchar', notNull: true, check: "type IN ('image','video')" },
     url: { type: 'varchar', notNull: true },
     sort_order: { type: 'integer', default: 0 }
@@ -36,7 +39,7 @@ exports.up = (pgm) => {
 
   // orders table
   pgm.createTable('orders', {
-    id: 'id',
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     name: { type: 'varchar', notNull: true },
     phone: { type: 'varchar', notNull: true },
     address: { type: 'text', notNull: true },
@@ -47,16 +50,16 @@ exports.up = (pgm) => {
 
   // order_items table
   pgm.createTable('order_items', {
-    id: 'id',
-    order_id: { type: 'integer', notNull: true, references: 'orders(id)' },
-    product_id: { type: 'integer', notNull: true, references: 'products(id)' },
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
+    order_id: { type: 'uuid', notNull: true, references: 'orders(id)' },
+    product_id: { type: 'uuid', notNull: true, references: 'products(id)' },
     quantity: { type: 'integer', notNull: true },
     price_at_purchase: { type: 'decimal(10,2)', notNull: true }
   });
 
   // promotions table
   pgm.createTable('promotions', {
-    id: 'id',
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     image_url: { type: 'varchar', notNull: true },
     redirect_url: { type: 'varchar', notNull: true },
     sort_order: { type: 'integer', default: 0 },
@@ -66,7 +69,15 @@ exports.up = (pgm) => {
   // indexes
   pgm.createIndex('users', 'phone');
   pgm.createIndex('products', 'category_id');
+  pgm.createIndex('products', 'title'); // for search
+  pgm.createIndex('products', 'price'); // for price filtering
   pgm.createIndex('orders', 'status');
+  pgm.createIndex('orders', 'phone'); // for order lookup
+  pgm.createIndex('order_items', 'order_id');
+  pgm.createIndex('order_items', 'product_id');
+  pgm.createIndex('product_media', 'product_id');
+  pgm.createIndex('promotions', 'is_active');
+  pgm.createIndex('promotions', 'sort_order');
 };
 
 exports.down = (pgm) => {
@@ -77,4 +88,5 @@ exports.down = (pgm) => {
   pgm.dropTable('products');
   pgm.dropTable('categories');
   pgm.dropTable('users');
+  pgm.dropExtension('uuid-ossp');
 };

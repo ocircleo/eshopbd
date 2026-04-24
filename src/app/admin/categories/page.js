@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { categorySchema } from '../../../validators/catalog.js'
@@ -10,11 +10,13 @@ import { Label } from '../../../components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
+import useInternalFetcher from '../../../utls/fetcher/useInternalFetcher'
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([])
   const [editing, setEditing] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  const { data: categories, mutate } = useInternalFetcher('/api/admin/categories')
 
   const {
     register,
@@ -24,18 +26,6 @@ export default function CategoriesPage() {
   } = useForm({
     resolver: zodResolver(categorySchema)
   })
-
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const fetchCategories = async () => {
-    const res = await fetch('/api/admin/categories')
-    if (res.ok) {
-      const data = await res.json()
-      setCategories(data)
-    }
-  }
 
   const onSubmit = async (data) => {
     const url = editing ? `/api/admin/categories/${editing.id}` : '/api/admin/categories'
@@ -48,7 +38,7 @@ export default function CategoriesPage() {
     })
 
     if (res.ok) {
-      fetchCategories()
+      mutate()
       setDialogOpen(false)
       reset()
       setEditing(null)
@@ -65,7 +55,7 @@ export default function CategoriesPage() {
     if (confirm('Are you sure?')) {
       const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        fetchCategories()
+        mutate()
       }
     }
   }
@@ -95,7 +85,7 @@ export default function CategoriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories.map((cat) => (
+              {(categories || []).map((cat) => (
                 <TableRow key={cat.id}>
                   <TableCell>{cat.id}</TableCell>
                   <TableCell>{cat.name}</TableCell>

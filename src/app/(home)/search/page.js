@@ -1,64 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button } from '../../components/ui/button'
-import { Card, CardContent } from '../../components/ui/card'
-import { Input } from '../../components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import { Label } from '../../components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import useInternalFetcher from '@/utls/fetcher/useInternalFetcher'
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-
   const [search, setSearch] = useState(searchParams.get('q') || '')
-  const [category, setCategory] = useState(searchParams.get('category') || '')
+  const [category, setCategory] = useState(searchParams.get('category') || 'all')
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
 
-  useEffect(() => {
-    fetchCategories()
-    fetchProducts()
-  }, [searchParams])
+  const { data: categoriesData, isLoading: categoriesLoading } = useInternalFetcher('/api/categories')
+  const categories = categoriesData || []
 
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/categories')
-      if (res.ok) {
-        const data = await res.json()
-        setCategories(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error)
-    }
-  }
+  const productsUrl = `/api/products?${searchParams}`
+  const { data: productsData, isLoading: productsLoading } = useInternalFetcher(productsUrl)
+  const products = productsData?.products || []
 
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams(searchParams)
-      const res = await fetch(`/api/products?${params}`)
-      if (res.ok) {
-        const data = await res.json()
-        setProducts(data.products || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch products:', error)
-    }
-    setLoading(false)
-  }
+  const loading = categoriesLoading || productsLoading
+
+
 
   const handleSearch = () => {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
-    if (category) params.set('category', category)
+    if (category && category !== 'all') params.set('category', category)
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
 
@@ -67,33 +43,16 @@ export default function SearchPage() {
 
   const clearFilters = () => {
     setSearch('')
-    setCategory('')
+    setCategory('all')
     setMinPrice('')
     setMaxPrice('')
     router.push('/search')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            EShopBD
-          </Link>
-          <nav className="flex gap-4">
-            <Link href="/search" className="text-gray-600 hover:text-gray-900">
-              Search
-            </Link>
-            <Link href="/order-status" className="text-gray-600 hover:text-gray-900">
-              Order Status
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-6">Search Products</h1>
+          <h1 className="text-3xl font-bold mb-6 text-foreground">Search Products</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
@@ -112,8 +71,8 @@ export default function SearchPage() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
-                  {categories.map((cat) => (
+                  <SelectItem value="all">All categories</SelectItem>
+                  {(categories || []).map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
@@ -144,8 +103,12 @@ export default function SearchPage() {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleSearch}>Search</Button>
-            <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
+            <Button onClick={handleSearch} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
+              Search
+            </Button>
+            <Button variant="outline" onClick={clearFilters} className="border-border hover:bg-accent hover:text-accent-foreground transition-all duration-200 active:scale-95">
+              Clear Filters
+            </Button>
           </div>
         </div>
 
@@ -157,46 +120,48 @@ export default function SearchPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <div className="aspect-square bg-gray-200"></div>
+                <Card key={i} className="animate-pulse bg-card">
+                  <div className="aspect-square bg-muted"></div>
                   <CardContent className="p-4">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-6 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-3 bg-muted rounded mb-2"></div>
+                    <div className="h-6 bg-muted rounded"></div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No products found</p>
-              <p className="text-gray-400">Try adjusting your search criteria</p>
+              <p className="text-muted-foreground text-lg">No products found</p>
+              <p className="text-muted-foreground/70">Try adjusting your search criteria</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {products.map((product) => (
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-105 bg-card border-border">
                   <div className="aspect-square relative">
                     {product.media && product.media.length > 0 ? (
                       <Image
                         src={product.media[0].url}
                         alt={product.title}
                         fill
-                        className="object-cover"
+                        className="object-cover rounded-t-lg"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-500">No Image</span>
+                      <div className="w-full h-full bg-muted flex items-center justify-center rounded-t-lg">
+                        <span className="text-muted-foreground">No Image</span>
                       </div>
                     )}
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.short_description}</p>
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-foreground">{product.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-2 line-clamp-2">{product.short_description}</p>
                     <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-green-600">${product.price}</span>
+                      <span className="text-xl font-bold text-primary">${product.price}</span>
                       <Link href={`/product/${product.id}`}>
-                        <Button size="sm">View</Button>
+                        <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 active:scale-95">
+                          View
+                        </Button>
                       </Link>
                     </div>
                   </CardContent>
@@ -205,13 +170,8 @@ export default function SearchPage() {
             </div>
           )}
         </section>
-      </main>
 
-      <footer className="bg-white border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2024 EShopBD. All rights reserved.</p>
-        </div>
-      </footer>
+
     </div>
   )
 }

@@ -6,12 +6,12 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 const statusSchema = z.object({
   phone: z.string().min(1, 'Phone is required'),
@@ -68,28 +68,11 @@ export default function OrderStatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            EShopBD
-          </Link>
-          <nav className="flex gap-4">
-            <Link href="/search" className="text-gray-600 hover:text-gray-900">
-              Search
-            </Link>
-            <Link href="/order-status" className="text-gray-600 hover:text-gray-900">
-              Order Status
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
+          <Card className="bg-card border-border shadow-lg">
             <CardHeader>
-              <CardTitle>Check Order Status</CardTitle>
+              <CardTitle className="text-foreground">Check Order Status</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -105,13 +88,13 @@ export default function OrderStatusPage() {
                   {errors.orderId && <p className="text-red-500 text-sm">{errors.orderId.message}</p>}
                 </div>
 
-                <Button type="submit" disabled={loading} className="w-full">
+                <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95">
                   {loading ? 'Checking...' : 'Check Status'}
                 </Button>
               </form>
 
               {error && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive text-destructive rounded">
                   {error}
                 </div>
               )}
@@ -119,9 +102,9 @@ export default function OrderStatusPage() {
           </Card>
 
           {order && (
-            <Card>
+            <Card className="bg-card border-border shadow-lg">
               <CardHeader>
-                <CardTitle>Order Details</CardTitle>
+                <CardTitle className="text-foreground">Order Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -192,13 +175,8 @@ export default function OrderStatusPage() {
             </Card>
           )}
         </div>
-      </main>
+  
 
-      <footer className="bg-white border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2024 EShopBD. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   )
 }

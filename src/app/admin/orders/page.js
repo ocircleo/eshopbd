@@ -1,29 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '../../../components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
-import { Badge } from '../../../components/ui/badge'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import useInternalFetcher from '@/utls/fetcher/useInternalFetcher'
 
 const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'canceled', 'rejected']
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([])
   const [filter, setFilter] = useState('all')
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  const fetchOrders = async () => {
-    const res = await fetch('/api/admin/orders')
-    if (res.ok) {
-      const data = await res.json()
-      setOrders(data)
-    }
-  }
+  const { data: orders, mutate } = useInternalFetcher('/api/admin/orders')
 
   const updateStatus = async (orderId, newStatus) => {
     const res = await fetch(`/api/admin/orders/${orderId}`, {
@@ -32,11 +22,11 @@ export default function OrdersPage() {
       body: JSON.stringify({ status: newStatus })
     })
     if (res.ok) {
-      fetchOrders()
+      mutate()
     }
   }
 
-  const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter)
+  const filteredOrders = filter === 'all' ? (orders || []) : (orders || []).filter(o => o.status === filter)
 
   const getStatusBadge = (status) => {
     const colors = {

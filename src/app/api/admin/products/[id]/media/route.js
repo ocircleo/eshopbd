@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { uploadMedia, getProductMedia } from '../../../../../../services/catalogService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../../../lib/auth.js'
 
 export async function GET(request, { params }) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const product_id = parseInt(params.id)
     const media = await getProductMedia(product_id)
     return NextResponse.json(media)
@@ -20,7 +15,7 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const product_id = parseInt(params.id)
     const formData = await request.formData()
     const file = formData.get('file')

@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import { Textarea } from '../../components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Trash2 } from 'lucide-react'
+import useInternalFetcher from '@/utls/fetcher/useInternalFetcher'
 
 const orderSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -28,8 +29,10 @@ const orderSchema = z.object({
 export default function PurchasePage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [products, setProducts] = useState([])
   const [submitting, setSubmitting] = useState(false)
+
+  const { data: productsData } = useInternalFetcher('/api/products')
+  const products = productsData?.products || []
 
   const {
     register,
@@ -49,22 +52,6 @@ export default function PurchasePage() {
     control,
     name: 'items'
   })
-
-  useEffect(() => {
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch('/api/products')
-      if (res.ok) {
-        const data = await res.json()
-        setProducts(data.products || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch products:', error)
-    }
-  }
 
   const onSubmit = async (data) => {
     setSubmitting(true)
@@ -99,27 +86,10 @@ export default function PurchasePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            EShopBD
-          </Link>
-          <nav className="flex gap-4">
-            <Link href="/search" className="text-gray-600 hover:text-gray-900">
-              Search
-            </Link>
-            <Link href="/order-status" className="text-gray-600 hover:text-gray-900">
-              Order Status
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <Card>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+        <Card className="bg-card border-border shadow-lg">
           <CardHeader>
-            <CardTitle>Place Your Order</CardTitle>
+            <CardTitle className="text-foreground">Place Your Order</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -160,7 +130,7 @@ export default function PurchasePage() {
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
                           <SelectContent>
-                            {products.map((product) => (
+                            {(products || []).map((product) => (
                               <SelectItem key={product.id} value={product.id.toString()}>
                                 {product.title} - ${product.price}
                               </SelectItem>
@@ -188,13 +158,14 @@ export default function PurchasePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => removeItem(index)}
+                          className="border-border hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 active:scale-95"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
                   ))}
-                  <Button type="button" variant="outline" onClick={addItem}>
+                  <Button type="button" variant="outline" onClick={addItem} className="border-border hover:bg-accent hover:text-accent-foreground transition-all duration-200 active:scale-95">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Another Item
                   </Button>
@@ -202,7 +173,7 @@ export default function PurchasePage() {
                 {errors.items && <p className="text-red-500 text-sm">{errors.items.message}</p>}
               </div>
 
-              <Button type="submit" disabled={submitting} className="w-full">
+              <Button type="submit" disabled={submitting} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95">
                 {submitting ? 'Placing Order...' : 'Place Order'}
               </Button>
             </form>
@@ -210,11 +181,6 @@ export default function PurchasePage() {
         </Card>
       </main>
 
-      <footer className="bg-white border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
-          <p>&copy; 2024 EShopBD. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -1,22 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { promotionSchema } from '../../../validators/promotion.js'
-import { Button } from '../../../components/ui/button'
-import { Input } from '../../../components/ui/input'
-import { Label } from '../../../components/ui/label'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../../components/ui/dialog'
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
-import { Switch } from '../../../components/ui/switch'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import useInternalFetcher from '../../../utls/fetcher/useInternalFetcher'
 
 export default function PromotionsPage() {
-  const [promotions, setPromotions] = useState([])
   const [editing, setEditing] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
+
+  const { data: promotions, mutate } = useInternalFetcher('/api/admin/promotions')
 
   const {
     register,
@@ -28,18 +30,6 @@ export default function PromotionsPage() {
   } = useForm({
     resolver: zodResolver(promotionSchema)
   })
-
-  useEffect(() => {
-    fetchPromotions()
-  }, [])
-
-  const fetchPromotions = async () => {
-    const res = await fetch('/api/admin/promotions')
-    if (res.ok) {
-      const data = await res.json()
-      setPromotions(data)
-    }
-  }
 
   const handleImageUpload = async (file) => {
     setUploading(true)
@@ -69,7 +59,7 @@ export default function PromotionsPage() {
     })
 
     if (res.ok) {
-      fetchPromotions()
+      mutate()
       setDialogOpen(false)
       reset()
       setEditing(null)
@@ -91,7 +81,7 @@ export default function PromotionsPage() {
     if (confirm('Are you sure?')) {
       const res = await fetch(`/api/admin/promotions/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        fetchPromotions()
+        mutate()
       }
     }
   }
@@ -109,7 +99,7 @@ export default function PromotionsPage() {
       body: JSON.stringify({ is_active: !current })
     })
     if (res.ok) {
-      fetchPromotions()
+      mutate()
     }
   }
 
@@ -135,7 +125,7 @@ export default function PromotionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {promotions.map((promo) => (
+              {(promotions || []).map((promo) => (
                 <TableRow key={promo.id}>
                   <TableCell>{promo.id}</TableCell>
                   <TableCell>

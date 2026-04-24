@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { uploadBanner } from '../../../../../services/promotionService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../../lib/auth.js'
 
 export async function POST(request) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const formData = await request.formData()
     const file = formData.get('file')
 

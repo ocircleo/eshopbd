@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { updateCategory, deleteCategory } from '../../../../../services/catalogService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../../lib/auth.js'
 
 export async function PUT(request, { params }) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const id = parseInt(params.id)
     const data = await request.json()
     const category = await updateCategory(id, data)
@@ -21,7 +16,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    getUser(request)
+    requireAdmin(request)
     const id = parseInt(params.id)
     const category = await deleteCategory(id)
     return NextResponse.json(category)

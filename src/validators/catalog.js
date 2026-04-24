@@ -7,17 +7,17 @@ export const categorySchema = z.object({
 export const productSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   price: z.number().positive('Price must be positive'),
-  category_id: z.number().int().positive('Category ID is required'),
+  category_id: z.string().uuid('Invalid category ID'),
   short_description: z.string().optional(),
   details: z.record(z.any()).optional()
 })
 
 export const updateProductSchema = productSchema.partial().extend({
-  id: z.number().int().positive()
+  id: z.string().uuid()
 })
 
 export const mediaUploadSchema = z.object({
-  product_id: z.number().int().positive(),
+  product_id: z.string().uuid(),
   type: z.enum(['image', 'video']),
   file: z.any() // Will validate in service
 })

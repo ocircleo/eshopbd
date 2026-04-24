@@ -1,15 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { listOrders } from '../../../../services/orderService.js'
-
-function getUser(request) {
-  const userHeader = request.headers.get('x-user')
-  if (!userHeader) throw new Error('No user')
-  return JSON.parse(userHeader)
-}
+import { requireAdmin } from '../../../../lib/auth.js'
 
 export async function GET(request) {
   try {
-    const user = getUser(request)
+    const user = requireAdmin(request)
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const phone = searchParams.get('phone')
